@@ -181,9 +181,18 @@ function Get-ZipCodePage([string]$ZipPath) {
 # NanaZip parses its command line like CommandLineToArgvW: a backslash before a quote escapes it
 function ConvertTo-Argument([string]$Value) { '"' + ($Value -replace '(\\+)$', '$1$1') + '"' }
 
+# Explorer can hand us a PATH without the Store app alias folder, so look there too
+function Find-NanaZip([string]$Exe) {
+    $cmd = Get-Command $Exe -CommandType Application -TotalCount 1 -ErrorAction SilentlyContinue
+    if ($cmd) { return $cmd.Source }
+    $alias = Join-Path ([Environment]::GetFolderPath('LocalApplicationData')) "Microsoft\WindowsApps\$Exe"
+    if (Test-Path -LiteralPath $alias) { return $alias }
+    throw "$Exe was not found. Install NanaZip from the Microsoft Store or with: winget install M2Team.NanaZip"
+}
+
 function Invoke-NanaZip([string]$Archive, [string]$Destination, $Cp) {
     $exe = if ($Console) { 'NanaZipC.exe' } else { 'NanaZipG.exe' }
-    $psi = New-Object Diagnostics.ProcessStartInfo (Get-Command $exe -CommandType Application -TotalCount 1).Source
+    $psi = New-Object Diagnostics.ProcessStartInfo (Find-NanaZip $exe)
     $argList = @('x', $Archive, "-o$Destination") + @(if ($Cp) { "-mcp=$Cp" })
     $psi.Arguments = ($argList | ForEach-Object { ConvertTo-Argument $_ }) -join ' '
     $psi.UseShellExecute = $false

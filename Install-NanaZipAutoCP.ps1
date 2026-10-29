@@ -214,7 +214,8 @@ try {
     if ([Runtime.InteropServices.RuntimeInformation]::OSArchitecture -ne 'X64') {
         throw 'The menu items need 64-bit Windows on x64; NanaZipAutoCP.dll is not built for this PC.'
     }
-    if (-not (Get-Command NanaZipG.exe -CommandType Application -ErrorAction SilentlyContinue)) {
+    $alias = Join-Path ([Environment]::GetFolderPath('LocalApplicationData')) 'Microsoft\WindowsApps\NanaZipG.exe'
+    if (-not (Get-Command NanaZipG.exe -CommandType Application -ErrorAction SilentlyContinue) -and -not (Test-Path -LiteralPath $alias)) {
         throw 'NanaZip is not installed. Install it from the Microsoft Store or with: winget install M2Team.NanaZip'
     }
     foreach ($f in 'Expand-ArchiveAuto.ps1', $Dll) {
